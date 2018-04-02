@@ -63,7 +63,7 @@ public class App {
 		
 		Grammar g = new Grammar(col, start);
 		Map<Nonterminal, Set<GeneralSymbol>> first = SetGenerator.getFirst(g);
-		//Map<Nonterminal, Set<GeneralSymbol>> follow = SetGenerator.getFollow(g, first);
+		Map<Nonterminal, Set<GeneralSymbol>> follow = SetGenerator.getFollow(g, first);
 		//Map<LL1Key, List<GeneralSymbol>> table = Table.createTable(g);
 		//Parser parser = ParserGenerator.createParser(g);
 		//ParseTree parseTree = ParserUtils.parseSequence(parser, example);
@@ -73,7 +73,7 @@ public class App {
 						  + "B -> cC\n"
 						  + "C -> d");		
 		System.out.println("Conjunto first: " + first.toString());
-		//System.out.println("Conjunto follow: " + follow.toString());
+		System.out.println("Conjunto follow: " + follow.toString());
 		//System.out.println("Tabela de parsing: " + table.toString());
 		//System.out.println("Exemplo de parsing: " + parseTree.toString() + "\n");
 		

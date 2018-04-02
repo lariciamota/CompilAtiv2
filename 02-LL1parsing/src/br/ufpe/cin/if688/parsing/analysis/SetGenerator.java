@@ -85,20 +85,45 @@ public final class SetGenerator {
          * Se existe uma produção A → αBβ, e ε ∈ FIRST(β), tudo que estiver em FOLLOW(A) estará em FOLLOW(B) 
          */
         for(Nonterminal key: follow.keySet()){ //calcular o follow de cada nao terminal
-        	Set<GeneralSymbol> valor = follow.get(key);
-        	if(key.equals((Nonterminal) g.getStartSymbol())){
-        		valor.add(SpecialSymbol.EOF); //$ ∈ FOLLOW(S), onde S é o símbolo inicial e $ é fim da entrada 
-        	}
-        	for(Production p: g.getProductions()){ 
-        		Iterator<GeneralSymbol> it = p.iterator();
-				while(it.hasNext()){ //vou ver todos os simbolos de tds producoes
-					GeneralSymbol s = it.next();
-					
-				}
-        	}
-        }
+    		Set<GeneralSymbol> valor = follow.get(key); 
+    		valor = followOf(g, key, valor, first, follow);
+    		
+    	}
         
         return follow;
+    }
+    
+    public static Set<GeneralSymbol> followOf(Grammar g, Nonterminal key, Set<GeneralSymbol> valor, Map<Nonterminal, Set<GeneralSymbol>> first, Map<Nonterminal, Set<GeneralSymbol>> follow){
+    	if(key.equals((Nonterminal) g.getStartSymbol())){
+    		valor.add(SpecialSymbol.EOF); //$ ∈ FOLLOW(S), onde S é o símbolo inicial e $ é fim da entrada 
+    	}
+    	for(Production p: g.getProductions()){
+    		Iterator<GeneralSymbol> it = p.iterator();
+			while(it.hasNext()){ //vou ver todos os simbolos de tds producoes
+				GeneralSymbol s = it.next();
+				if(s.equals(key)){
+					if(it.hasNext()){ 
+						Set<GeneralSymbol> firstBeta = firstOf(g, (Symbol) it.next(), valor, first);
+						if(firstBeta.contains(SpecialSymbol.EPSILON)){
+							firstBeta.remove(SpecialSymbol.EPSILON);  
+							valor.addAll(firstBeta); //Se existe uma produção A → αBβ, tudo que pertence a FIRST(β) exceto ε está em FOLLOW(B)
+					        //Se existe uma produção A → αBβ, e ε ∈ FIRST(β), tudo que estiver em FOLLOW(A) estará em FOLLOW(B) 
+							Nonterminal A = p.getNonterminal();
+							if(!A.equals(key)){
+								valor.addAll(followOf(g, A, follow.get(A), first, follow));
+							}
+						} 
+					} else {
+				        //Se existe uma produção A → αB, então tudo que estiver em FOLLOW(A) estará em FOLLOW(B) 
+						Nonterminal A = p.getNonterminal();
+						if(!A.equals(key)){
+							valor.addAll(followOf(g, A, follow.get(A), first, follow));
+						}
+					}
+				}
+			}
+    	}
+    	return valor;
     }
     
     //método para inicializar mapeamento nãoterminais -> conjunto de símbolos
