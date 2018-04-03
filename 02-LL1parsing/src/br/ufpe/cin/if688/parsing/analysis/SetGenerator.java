@@ -34,7 +34,7 @@ public final class SetGenerator {
     
     public static Set<GeneralSymbol> firstOf(Grammar g, Symbol key, Set<GeneralSymbol> valor, Map<Nonterminal, Set<GeneralSymbol>> first){
     	if(key.isTerminal()){
-    		valor.add((Terminal) key); //Se X é terminal FIRST(X) = {X} 
+    		valor.add(key); //Se X é terminal FIRST(X) = {X} 
     	} else {
     		for (Production p: g.getProductions()) { //vejo producao por producao
     			if(p.getNonterminal().equals(key) ){ //analiso somente as producoes do nao terminal da vez
@@ -42,13 +42,13 @@ public final class SetGenerator {
     				while(it.hasNext()){ //lista de simbolos de uma producao do nao terminal q quero
     					GeneralSymbol s = it.next();
     					if(s instanceof Terminal){  
-    						valor.add((Terminal) s);
+    						valor.add(s);
     						break;
     					} else if(s.equals(SpecialSymbol.EPSILON)){ //Se X->ε, ε pertence a FIRST(X)
     						valor.add(SpecialSymbol.EPSILON);
     						break;
     					} else { //Se X-> Y1Y2...Yk, FIRST(Y1Y2...Yk) esta contido em FIRST(X)
-    						Set<GeneralSymbol> valorS = first.get((Nonterminal) s);
+    						Set<GeneralSymbol> valorS = first.get(s);
     						valorS = firstOf(g, (Nonterminal) s, valorS, first);
     						if(!valorS.contains(SpecialSymbol.EPSILON)){ //FIRST(Y1) caso ε nao pertenca a FIRST(Y1)
     							valor.addAll(valorS);
@@ -99,25 +99,35 @@ public final class SetGenerator {
     	}
     	for(Production p: g.getProductions()){
     		Iterator<GeneralSymbol> it = p.iterator();
+    		List<GeneralSymbol> l = p.getProduction();
 			while(it.hasNext()){ //vou ver todos os simbolos de tds producoes
 				GeneralSymbol s = it.next();
 				if(s.equals(key)){
 					if(it.hasNext()){ 
-						Set<GeneralSymbol> firstBeta = firstOf(g, (Symbol) it.next(), valor, first);
+						GeneralSymbol prox = l.get(l.indexOf(s) + 1); //proximo simbolo esta no indice seguinte ao s
+						Set<GeneralSymbol> firstBeta = first.get(prox);
+						if (firstBeta == null) { //para o caso do proximo ser terminal, first.get(prox) retornaria nulo, mas firstOf retorna o terminal
+							firstBeta = new HashSet<GeneralSymbol>();
+							firstBeta = firstOf(g, (Symbol)prox, firstBeta, first);
+						}
 						if(firstBeta.contains(SpecialSymbol.EPSILON)){
 							firstBeta.remove(SpecialSymbol.EPSILON);  
 							valor.addAll(firstBeta); //Se existe uma produção A → αBβ, tudo que pertence a FIRST(β) exceto ε está em FOLLOW(B)
 					        //Se existe uma produção A → αBβ, e ε ∈ FIRST(β), tudo que estiver em FOLLOW(A) estará em FOLLOW(B) 
 							Nonterminal A = p.getNonterminal();
 							if(!A.equals(key)){
-								valor.addAll(followOf(g, A, follow.get(A), first, follow));
+					    		Set<GeneralSymbol> valorA = follow.get(A); 
+								valor.addAll(followOf(g, A, valorA, first, follow));
 							}
-						} 
+						} else {
+							valor.addAll(firstBeta); //Se existe uma produção A → αBβ, tudo que pertence a FIRST(β) exceto ε está em FOLLOW(B)
+						}
 					} else {
 				        //Se existe uma produção A → αB, então tudo que estiver em FOLLOW(A) estará em FOLLOW(B) 
 						Nonterminal A = p.getNonterminal();
 						if(!A.equals(key)){
-							valor.addAll(followOf(g, A, follow.get(A), first, follow));
+				    		Set<GeneralSymbol> valorA = follow.get(A); 
+							valor.addAll(followOf(g, A, valorA, first, follow));
 						}
 					}
 				}
@@ -125,6 +135,7 @@ public final class SetGenerator {
     	}
     	return valor;
     }
+    
     
     //método para inicializar mapeamento nãoterminais -> conjunto de símbolos
     private static Map<Nonterminal, Set<GeneralSymbol>> initializeNonterminalMapping(Grammar g) {

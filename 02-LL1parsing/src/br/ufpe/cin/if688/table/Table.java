@@ -12,13 +12,10 @@ public final class Table {
 	public static Map<LL1Key, List<GeneralSymbol>> createTable(Grammar g) throws NotLL1Exception {
         if (g == null) throw new NullPointerException();
 
-        Map<Nonterminal, Set<GeneralSymbol>> first =
-            SetGenerator.getFirst(g);
-        Map<Nonterminal, Set<GeneralSymbol>> follow =
-            SetGenerator.getFollow(g, first);
+        Map<Nonterminal, Set<GeneralSymbol>> first = SetGenerator.getFirst(g);
+        Map<Nonterminal, Set<GeneralSymbol>> follow = SetGenerator.getFollow(g, first);
 
-        Map<LL1Key, List<GeneralSymbol>> parsingTable = 
-            new HashMap<LL1Key, List<GeneralSymbol>>();
+        Map<LL1Key, List<GeneralSymbol>> parsingTable = new HashMap<LL1Key, List<GeneralSymbol>>();
 
         /*
          * Implemente aqui o método para retornar a parsing table
